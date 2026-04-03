@@ -21,3 +21,6 @@ replicate>=0.22.0
 
 # IBM Granite utils (get_env_var)
 git+https://github.com/ibm-granite-community/utils
+
+
+gunicorn
