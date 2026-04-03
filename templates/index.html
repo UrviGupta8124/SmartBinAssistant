@@ -1,55 +1,106 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>RAG Query Interface</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background: #f9f9f9; }
-    textarea { width: 100%; height: 100px; font-size: 1rem; }
-    button { padding: 0.5rem 1rem; font-size: 1rem; margin-top: 0.5rem; }
-    .response { margin-top: 1rem; padding: 1rem; background: #e0f7fa; border-radius: 5px; }
-  </style>
-</head>
-<body>
-  <h1>Ask your RAG model</h1>
-  <form method="POST">
-    <textarea name="query" placeholder="Type your question here..."></textarea>
-    <br />
-    <button type="submit">Submit</button>
-  </form>
-
-  {% if response %}
-  <div class="response">
-    <h2>Response:</h2>
-    <p>{{ response }}</p>
-  </div>
-  {% endif %}
-</body>
-</html> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RAG Query Interface</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoTech Smart Dustbin Assistant</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      display: flex; justify-content: center;
+      align-items: center; height: 100vh;
+    }
+    .chat-container {
+      width: 100%; max-width: 600px; height: 90vh;
+      background: white; border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .chat-header {
+      background: linear-gradient(90deg, #16a34a, #15803d);
+      color: white; padding: 20px; font-size: 18px; font-weight: bold;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .chat-header a {
+      color: white; font-size: 12px; text-decoration: none;
+      opacity: 0.8; border: 1px solid white;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .chat-header a:hover { opacity: 1; }
+    .chat-messages {
+      flex: 1; padding: 20px;
+      display: flex; flex-direction: column;
+      gap: 10px; overflow-y: auto; background-color: #f9fafb;
+    }
+    .message {
+      max-width: 80%; padding: 12px 16px;
+      border-radius: 12px; word-wrap: break-word;
+      font-size: 14px; line-height: 1.5;
+    }
+    .message.user {
+      align-self: flex-end;
+      background-color: #16a34a; color: white;
+      border-bottom-right-radius: 0;
+    }
+    .message.bot {
+      align-self: flex-start;
+      background-color: #dcfce7; color: #1f2937;
+      border-bottom-left-radius: 0;
+    }
+    .chat-input {
+      display: flex; padding: 15px;
+      border-top: 1px solid #e5e7eb; background-color: #f9fafb;
+    }
+    .chat-input textarea {
+      flex: 1; padding: 10px;
+      border: 1px solid #d1d5db; border-radius: 8px;
+      resize: none; font-size: 14px; height: 44px;
+    }
+    .chat-input button {
+      margin-left: 10px; padding: 10px 20px;
+      background-color: #16a34a; color: white;
+      border: none; border-radius: 8px;
+      cursor: pointer; font-weight: bold;
+    }
+    .chat-input button:hover { background-color: #15803d; }
+    .chat-messages::-webkit-scrollbar { width: 6px; }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1; border-radius: 3px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Ask your RAG model</h1>
-    <form method="POST" action="/">
-      <textarea name="query" placeholder="Type your question here..." required>{{ request.form.query or '' }}</textarea>
-      <br />
-      <button type="submit">Submit</button>
+  <div class="chat-container">
+    <div class="chat-header">
+      🌱 EcoTech Smart Dustbin Assistant
+      <a href="/clear">Clear Chat</a>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot">
+        👋 Welcome! I'm your <strong>EcoTech Smart Dustbin</strong> assistant by Team Greenovators. Ask me anything about our smart waste management project — AI segregation, hardware, mobile app, feasibility, impact, and more!
+      </div>
+
+      {% for msg in history %}
+      <div class="message user">{{ msg.user }}</div>
+      <div class="message bot">{{ msg.bot }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- ↓ action="/chat" is the key fix -->
+    <form class="chat-input" method="POST" action="/chat">
+      <textarea name="query" placeholder="Ask about EcoTech Smart Dustbin..."></textarea>
+      <button type="submit">Send</button>
     </form>
 
-    {% if response %}
-    <div class="response-box">
-      <strong>Response:</strong>
-      <pre>{{ response }}</pre>
-    </div>
-    {% endif %}
   </div>
+
+  <script>
+    const chatMessages = document.getElementById("chatMessages");
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  </script>
 </body>
 </html>
