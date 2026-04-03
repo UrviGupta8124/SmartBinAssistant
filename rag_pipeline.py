@@ -57,23 +57,46 @@ llm = ChatGroq(
 )
 
 # 7. QA chain
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    retriever=vector_db.as_retriever(),
-    chain_type_kwargs={"prompt": prompt}
-)
+# Global variable - model sirf ek baar load hoga
+_qa_chain = None
+
+def get_qa_chain():
+    global _qa_chain
+    if _qa_chain is None:
+        # Load documents
+        loader = TextLoader("sample_docs/smart_waste.txt", encoding="utf-8")
+        documents = loader.load()
+        
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        texts = text_splitter.split_documents(documents)
+        
+        embedding_model = HuggingFaceEmbeddings(
+            model_name="ibm-granite/granite-embedding-30m-english"
+        )
+        
+        vector_db = FAISS.from_documents(texts, embedding_model)
+        
+        llm = ChatGroq(
+            model="llama-3.3-70b-versatile",
+            temperature=0,
+            groq_api_key=os.getenv("GROQ_API_KEY")
+        )
+        
+        _qa_chain = RetrievalQA.from_chain_type(
+            llm=llm,
+            retriever=vector_db.as_retriever(),
+            chain_type_kwargs={"prompt": prompt}
+        )
+    return _qa_chain
 
 def run_query(query: str, chat_history: list = []) -> str:
-    # Build history string from last 5 messages
+    qa_chain = get_qa_chain()  # Load only when first query comes
+    
     history_text = ""
     for msg in chat_history[-5:]:
         history_text += f"User: {msg['user']}\nAssistant: {msg['bot']}\n"
 
-    # Inject history into the query
-    if history_text:
-        full_query = f"Previous conversation:\n{history_text}\nCurrent question: {query}"
-    else:
-        full_query = query
-
+    full_query = f"Previous conversation:\n{history_text}\nCurrent question: {query}" if history_text else query
+    
     response = qa_chain.run(full_query)
     return response
