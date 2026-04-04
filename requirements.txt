@@ -40,3 +40,4 @@ replicate>=0.22.0
 git+https://github.com/ibm-granite-community/utils
 gunicorn
 flask
+
